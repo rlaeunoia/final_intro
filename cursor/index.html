@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Assist Mode - AI Co-Process Interface</title>
+    <meta name="description" content="AI-assisted interface demonstrating human-machine collaboration" />
+    <link rel="stylesheet" href="globals.css" />
+    <link rel="stylesheet" href="styleguide.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="screen" role="main">
+        <!-- 정상 레이어 -->
+        <div class="content content--normal">
+          <header class="screen-header">
+            <img class="ASSIT-MODE" src="img/ASSIT MODE.svg" alt="Assist Mode Logo" />
+          </header>
+      
+          <section class="content-section" aria-labelledby="main-message">
+            <p class="AS-ARTIFICIAL" id="main-message">
+              AS ARTIFICIAL SYSTEMS LEARN TO CORRECT US, WE LEARN TO STAY STILL. <br />EVERY MISTAKE ERASED, EVERY INTENTION
+              REPLACED. <br />AND SO WE BECOME THE QUIET PART OF THE MACHINE — A STILLNESS THAT HUMS, PERFECTLY IN TUNE,
+              <br />WHERE EVEN OUR ERRORS SOUND BEAUTIFUL.
+            </p>
+          </section>
+      
+          <section class="slider-section" aria-labelledby="slider-label">
+            <div class="div" role="group" aria-label="Progress indicator">
+              <img class="line-stroke" src="img/slidebar.svg" alt="" role="presentation" />
+              <span class="text-wrapper-2">0%</span>
+              <span class="text-wrapper-3">100%</span>
+              <span class="text-wrapper-4">50%</span>
+              <span class="text-wrapper-5">25%</span>
+              <span class="text-wrapper-6">75%</span>
+            </div>
+          </section>
+      
+          <div class="frame" role="button" tabindex="0" aria-label="Slide to start button">
+            <span class="text-wrapper">SLIDE to START</span>
+          </div>
+      
+          <footer class="screen-footer">
+            <img class="HUMAN-VER" src="img/HUMAN VER 0.5.svg" alt="Human Version 0.5" />
+            <p class="AUTONOMY-ERROR-WAIT">AUTONOMY ERROR — WAIT FOR AI</p>
+            <p class="IN-CO-PROCESS-WITH">IN CO - PROCESS WITH ARTIFICIAL SYSTEM v.25</p>
+          </footer>
+        </div>
+      
+        <!-- 반전 레이어 (왼쪽만 보이도록 클립) -->
+        <div class="content content--inv" aria-hidden="true">
+          <header class="screen-header">
+            <img class="ASSIT-MODE" src="img/ASSIT MODE.svg" alt="" />
+          </header>
+      
+          <section class="content-section">
+            <p class="AS-ARTIFICIAL">
+              AS ARTIFICIAL SYSTEMS LEARN TO CORRECT US, WE LEARN TO STAY STILL. <br />EVERY MISTAKE ERASED, EVERY INTENTION
+              REPLACED. <br />AND SO WE BECOME THE QUIET PART OF THE MACHINE — A STILLNESS THAT HUMS, PERFECTLY IN TUNE,
+              <br />WHERE EVEN OUR ERRORS SOUND BEAUTIFUL.
+            </p>
+          </section>
+      
+          <section class="slider-section">
+            <div class="div">
+              <img class="line-stroke" src="img/slidebar.svg" alt="" />
+              <span class="text-wrapper-2">0%</span>
+              <span class="text-wrapper-3">100%</span>
+              <span class="text-wrapper-4">50%</span>
+              <span class="text-wrapper-5">25%</span>
+              <span class="text-wrapper-6">75%</span>
+            </div>
+          </section>
+      
+          <div class="frame"><span class="text-wrapper">SLIDE to START</span></div>
+      
+          <footer class="screen-footer">
+            <img class="HUMAN-VER" src="img/HUMAN VER 0.5.svg" alt="" />
+            <p class="AUTONOMY-ERROR-WAIT">AUTONOMY ERROR — WAIT FOR AI</p>
+            <p class="IN-CO-PROCESS-WITH">IN CO - PROCESS WITH ARTIFICIAL SYSTEM v.25</p>
+          </footer>
+        </div>
+      
+        <!-- 핸들: 두 레이어 위에 떠있게 -->
+        <div
+          class="ellipse"
+          role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+          aria-label="Slide to start" tabindex="0">
+        </div>
+      </main>
+      
+      <script>
+        (function(){
+          const root   = document.documentElement;
+          const screen = document.querySelector('.screen');
+          const knob   = document.querySelector('.ellipse');
+          const bar    = document.querySelector('.div');           // 슬라이더 영역
+          const line   = document.querySelector('.line-stroke');   // 실제 트랙(선 이미지)
+          const frames = document.querySelectorAll('.frame');
+          const labels = document.querySelectorAll('.frame .text-wrapper');
+        
+          let dragging = false;
+          let hasChosen = false;
+        
+          /* 기준 rect */
+          function getTrackRect(){ return (line || bar).getBoundingClientRect(); }
+          function getScreenRect(){ return screen.getBoundingClientRect(); }
+        
+          function applyScreenX(screenXpx){
+  const trackRect = (line || bar).getBoundingClientRect();
+  const scr       = screen.getBoundingClientRect();
+
+  // X좌표 — 트랙의 상대 위치
+  knob.style.left = screenXpx + 'px';
+
+  // Y좌표 — 트랙 중앙에 항상 맞추기 (반응형 대응)
+  const centerY = trackRect.top + trackRect.height / 2 - scr.top;
+  knob.style.top = centerY + 'px';
+
+  // 배경 경계도 점 중심에 동기화
+  root.style.setProperty('--split_vw', screenXpx + 'px');
+}
+
+        
+          /* percent(0~100)를 트랙에 투영 → 화면 px로 변환 */
+          function percentToScreenX(percent){
+            const track = getTrackRect();
+            const scr   = getScreenRect();
+            const ratio = percent / 100;
+            const xOnTrack = track.left + track.width * ratio; // 뷰포트 좌표
+            return xOnTrack - scr.left;                        // .screen 좌표(px)
+          }
+        
+          /* clientX(마우스/터치)를 트랙 비율로 스냅 */
+          function setFromClientX(clientX){
+            const r = getTrackRect();
+            const x = Math.min(Math.max(clientX - r.left, 0), r.width); // 0~width
+            const ratio = x / r.width;                 // 0~1
+            const percent = Math.round(ratio * 100);   // 의미상 퍼센트(레이어 클립에 씀)
+            root.style.setProperty('--split', percent);
+            knob.setAttribute('aria-valuenow', String(percent));
+            // 화면 px로도 반영 (배경 경계 = 점 중심)
+            const screenX = percentToScreenX(percent);
+            applyScreenX(screenX);
+            return percent;
+          }
+        
+          /* 외부에서 퍼센트 지정(키보드 등) */
+          function setSplit(percent){
+            percent = Math.min(100, Math.max(0, Math.round(percent)));
+            root.style.setProperty('--split', percent);
+            knob.setAttribute('aria-valuenow', String(percent));
+            applyScreenX(percentToScreenX(percent));
+          }
+        
+          /* Next 활성화 */
+          function activateNext(){
+            if (hasChosen) return;
+            hasChosen = true;
+            labels.forEach(l => { l.textContent = 'Next'; });
+            frames.forEach(f => f.classList.add('is-ready'));
+          }
+        
+          function handleFrameClick(){
+            if (!hasChosen) return;
+            alert('Stage 1는 추후 제작 예정입니다.');
+            // 실제 연결 시:
+            // const ai = getComputedStyle(root).getPropertyValue('--split').trim();
+            // window.location.href = `stage1.html?ai=${ai}`;
+          }
+        
+          frames.forEach(f => f.addEventListener('click', handleFrameClick));
+        
+          /* ===== 드래그 ===== */
+          function onDown(e){
+            dragging = true;
+            const p = e.touches ? e.touches[0] : e;
+            setFromClientX(p.clientX);
+            e.preventDefault();
+          }
+          function onMove(e){
+            if(!dragging) return;
+            const p = e.touches ? e.touches[0] : e;
+            setFromClientX(p.clientX);
+          }
+          function onUp(){
+            if(!dragging) return;
+            dragging = false;
+            activateNext();
+          }
+        
+          knob.addEventListener('mousedown', onDown);
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        
+          knob.addEventListener('touchstart', onDown, {passive:false});
+          window.addEventListener('touchmove', onMove, {passive:false});
+          window.addEventListener('touchend', onUp);
+        
+          /* 키보드 */
+          knob.addEventListener('keydown', (e)=>{
+            const cur = parseInt(getComputedStyle(root).getPropertyValue('--split')) || 50;
+            let next = cur;
+            if(e.key === 'ArrowLeft')  next = Math.max(0, cur - 1);
+            if(e.key === 'ArrowRight') next = Math.min(100, cur + 1);
+            if(e.key === 'Home')       next = 0;
+            if(e.key === 'End')        next = 100;
+            if(next !== cur){
+              setSplit(next);
+              activateNext();
+              e.preventDefault();
+            }
+          });
+        
+          /* 초기 위치 & 리사이즈 대응 */
+          function syncFromVar(){
+            const cur = parseInt(getComputedStyle(root).getPropertyValue('--split')) || 50;
+            setSplit(cur);
+          }
+          window.addEventListener('resize', syncFromVar);
+          window.addEventListener('orientationchange', syncFromVar);
+        
+          // init
+          frames.forEach(f => f.classList.remove('is-ready'));
+          syncFromVar();
+        })();
+        </script>
+        
+        
+        
+        
+  </body>
+</html>
